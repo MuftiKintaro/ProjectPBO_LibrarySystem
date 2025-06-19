@@ -419,6 +419,9 @@ public class LibraryApp extends Application {
         newBookField.setPromptText("Judul buku baru");
 
         Button addBookBtn = new Button("Tambah Buku");
+        addBookBtn.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 6;");
+        addBookBtn.setOnMouseEntered(e -> addBookBtn.setStyle("-fx-background-color: #45a049; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 6;"));
+        addBookBtn.setOnMouseExited(e -> addBookBtn.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 6;"));
         addBookBtn.setOnAction(e -> {
             String title = newBookField.getText().trim();
             try {
@@ -435,6 +438,9 @@ public class LibraryApp extends Application {
         });
 
         Button removeBookBtn = new Button("Hapus Buku Terpilih");
+        removeBookBtn.setStyle("-fx-background-color: #f44336; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 6;");
+        removeBookBtn.setOnMouseEntered(e -> removeBookBtn.setStyle("-fx-background-color: #e53935; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 6;"));
+        removeBookBtn.setOnMouseExited(e -> removeBookBtn.setStyle("-fx-background-color: #f44336; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 6;"));
         removeBookBtn.setOnAction(e -> {
             Book selected = booksTableAdmin.getSelectionModel().getSelectedItem();
             try {
@@ -486,6 +492,9 @@ public class LibraryApp extends Application {
         newUserPassField.setPromptText("Password");
 
         Button addUserBtn = new Button("Tambah User");
+        addUserBtn.setStyle("-fx-background-color: #2196F3; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 6;");
+        addUserBtn.setOnMouseEntered(e -> addUserBtn.setStyle("-fx-background-color: #1976D2; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 6;"));
+        addUserBtn.setOnMouseExited(e -> addUserBtn.setStyle("-fx-background-color: #2196F3; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 6;"));
         addUserBtn.setOnAction(e -> {
             String uname = newUserField.getText().trim();
             String upass = newUserPassField.getText();
@@ -503,6 +512,9 @@ public class LibraryApp extends Application {
         });
 
         Button removeUserBtn = new Button("Hapus User Terpilih");
+        removeUserBtn.setStyle("-fx-background-color: #FF9800; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 6;");
+        removeUserBtn.setOnMouseEntered(e -> removeUserBtn.setStyle("-fx-background-color: #FB8C00; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 6;"));
+        removeUserBtn.setOnMouseExited(e -> removeUserBtn.setStyle("-fx-background-color: #FF9800; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 6;"));
         removeUserBtn.setOnAction(e -> {
             User u = userTableAdmin.getSelectionModel().getSelectedItem();
             try {
