@@ -20,6 +20,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
 
+
 public class LibraryApp extends Application {
 
     // Dummy users
@@ -33,6 +34,7 @@ public class LibraryApp extends Application {
         userPasswords.put("oyi", "user123");
         userRoles.put("user@example.com", "user");
     }
+
 
     @Override
     public void start(Stage primaryStage) {
@@ -61,6 +63,7 @@ public class LibraryApp extends Application {
         errorLabel.setFont(Font.font(12));
         errorLabel.setVisible(false);
 
+
         TextField usernameField = new TextField();
         usernameField.setPromptText("Username");
         usernameField.setMaxWidth(240);
@@ -83,9 +86,11 @@ public class LibraryApp extends Application {
             alert.showAndWait();
         });
 
+
         loginButton.setOnAction(e -> {
             String username = usernameField.getText().trim();
             String password = passwordField.getText().trim();
+
 
             if (username.isEmpty() || password.isEmpty()) {
                 errorLabel.setText("Username dan password tidak boleh kosong.");
@@ -133,7 +138,5 @@ public class LibraryApp extends Application {
         primaryStage.show();
     }
 
-    public static void main(String[] args) {
-        launch(args);
-    }
+
 }
