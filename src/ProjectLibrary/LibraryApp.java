@@ -144,6 +144,9 @@ public class LibraryApp extends Application {
 
 package ProjectLibrary;
 
+import javafx.animation.Animation;
+import javafx.animation.Interpolator;
+import javafx.animation.TranslateTransition;
 import javafx.application.Application;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.geometry.Insets;
@@ -155,8 +158,10 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
@@ -166,7 +171,7 @@ import java.util.stream.Collectors;
 public class LibraryApp extends Application {
 
     private Stage primaryStage;
-    private Scene loginScene, adminScene, userScene;
+    private Scene loginScene, adminScene, userScene, registrationScene;
 
     // Data storage
     private Map<String, User> users = new HashMap<>();
@@ -191,6 +196,7 @@ public class LibraryApp extends Application {
         initLoginScene();
         initAdminScene();
         initUserScene();
+        initRegistrationScene();
 
         primaryStage.setScene(loginScene);
         primaryStage.show();
@@ -209,6 +215,76 @@ public class LibraryApp extends Application {
         books.add(new Book("40 Hari Di Malam Kubur"));
         books.add(new Book("Logika Komputasi"));
         books.add(new Book("G30S PKI"));
+    }
+
+    // ==================== REGISTRATION SCENE ====================
+    private void initRegistrationScene() {
+        VBox registrationBox = new VBox(20);
+        registrationBox.setAlignment(Pos.CENTER);
+        registrationBox.setPadding(new Insets(30));
+        registrationBox.setStyle("-fx-background-color: rgba(255, 255, 255, 0.9); -fx-background-radius: 20;");
+
+        Label titleLabel = new Label("Registrasi Anggota");
+        titleLabel.setFont(new Font("Segoe UI", 24));
+
+        Label errorLabel = new Label();
+        errorLabel.setTextFill(Color.RED);
+        errorLabel.setVisible(false);
+
+        TextField usernameField = new TextField();
+        usernameField.setPromptText("Username");
+        usernameField.setMaxWidth(240);
+
+        PasswordField passwordField = new PasswordField();
+        passwordField.setPromptText("Password");
+        passwordField.setMaxWidth(240);
+
+        Button registerBtn = new Button("Daftar");
+        registerBtn.setPrefWidth(240);
+        registerBtn.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white;");
+
+        registerBtn.setOnAction(e -> {
+            String username = usernameField.getText().trim();
+            String password = passwordField.getText();
+
+            if (username.isEmpty() || password.isEmpty()) {
+                errorLabel.setText("Username dan password tidak boleh kosong");
+                errorLabel.setVisible(true);
+                return;
+            }
+
+            if (users.containsKey(username)) {
+                errorLabel.setText("Username sudah digunakan");
+                errorLabel.setVisible(true);
+                return;
+            }
+
+            users.put(username, new User(username, password, false));
+            errorLabel.setText("Registrasi berhasil! Silakan login");
+            errorLabel.setTextFill(Color.GREEN);
+            errorLabel.setVisible(true);
+
+            usernameField.clear();
+            passwordField.clear();
+        });
+
+        Button backToLoginBtn = new Button("Kembali ke Login");
+        backToLoginBtn.setStyle("-fx-text-fill: #007bff;");
+        backToLoginBtn.setOnAction(e -> {
+            errorLabel.setVisible(false);
+            primaryStage.setScene(loginScene);
+        });
+
+        registrationBox.getChildren().addAll(
+                titleLabel,
+                errorLabel,
+                usernameField,
+                passwordField,
+                registerBtn,
+                backToLoginBtn
+        );
+
+        registrationScene = new Scene(registrationBox, 400, 400);
     }
 
 
@@ -250,6 +326,14 @@ public class LibraryApp extends Application {
         Label messageLabel = new Label();
         loginBtn.setPrefWidth(240);
         loginBtn.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-font-size: 14px; -fx-background-radius: 8;");
+
+        Button registerBtn = new Button("Daftar Anggota Baru");
+        registerBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: white; -fx-underline: true;");
+        registerBtn.setOnAction(e -> {
+            errorLabel.setVisible(false);
+            primaryStage.setScene(registrationScene);
+        });
+
 
         Button forgotButton = new Button("Lupa Password?");
         forgotButton.setStyle("-fx-background-color: transparent; -fx-text-fill: white; -fx-underline: true;");
@@ -294,7 +378,7 @@ public class LibraryApp extends Application {
         });
 
         //===== BOX HITAM DI TENGAH! =====
-        VBox loginBox = new VBox(10, titleLabel, errorLabel,  usernameField, passwordField, loginBtn, forgotButton);
+        VBox loginBox = new VBox(10, titleLabel, errorLabel,  usernameField, passwordField, loginBtn, forgotButton, registerBtn);
         loginBox.setAlignment(Pos.CENTER);
         loginBox.setMaxWidth(500);
         loginBox.setPadding(new Insets(30));
@@ -321,7 +405,7 @@ public class LibraryApp extends Application {
     private TableView<User> userTableAdmin;
 
     private void initAdminScene() {
-        // Books Table & Controls
+        // ==================== TABLE BUKU ====================
         booksTableAdmin = new TableView<>();
         TableColumn<Book, String> bookTitleCol = new TableColumn<>("Judul Buku");
         bookTitleCol.setCellValueFactory(new PropertyValueFactory<>("title"));
@@ -329,10 +413,11 @@ public class LibraryApp extends Application {
         bookStatusCol.setCellValueFactory(cellData -> new SimpleStringProperty(
                 cellData.getValue().isBorrowed() ? "Dipinjam" : "Tersedia"));
         booksTableAdmin.getColumns().addAll(bookTitleCol, bookStatusCol);
-        booksTableAdmin.setPrefHeight(180);
+        booksTableAdmin.setPrefHeight(150);
 
         newBookField = new TextField();
         newBookField.setPromptText("Judul buku baru");
+
         Button addBookBtn = new Button("Tambah Buku");
         addBookBtn.setOnAction(e -> {
             String title = newBookField.getText().trim();
@@ -366,11 +451,11 @@ public class LibraryApp extends Application {
         HBox bookControls = new HBox(10, newBookField, addBookBtn, removeBookBtn);
         bookControls.setAlignment(Pos.CENTER_LEFT);
 
-        // Borrow records table
+        // ==================== TABLE PEMINJAMAN ====================
         borrowTableAdmin = new TableView<>();
         TableColumn<BorrowRecord, String> brBookCol = new TableColumn<>("Judul Buku");
         brBookCol.setCellValueFactory(new PropertyValueFactory<>("bookTitle"));
-        TableColumn<BorrowRecord, String> brUserCol = new TableColumn<>("Nama ProjectLibrary.User");
+        TableColumn<BorrowRecord, String> brUserCol = new TableColumn<>("Nama User");
         brUserCol.setCellValueFactory(new PropertyValueFactory<>("username"));
         TableColumn<BorrowRecord, LocalDate> brDateCol = new TableColumn<>("Tanggal Pinjam");
         brDateCol.setCellValueFactory(new PropertyValueFactory<>("borrowDate"));
@@ -381,9 +466,9 @@ public class LibraryApp extends Application {
                 String.valueOf(cellData.getValue().calculateFine())
         ));
         borrowTableAdmin.getColumns().addAll(brBookCol, brUserCol, brDateCol, brDaysCol, brFineCol);
-        borrowTableAdmin.setPrefHeight(180);
+        borrowTableAdmin.setPrefHeight(150);
 
-        // Users Table & Controls
+        // ==================== TABLE USER ====================
         userTableAdmin = new TableView<>();
         TableColumn<User, String> userNameCol = new TableColumn<>("Username");
         userNameCol.setCellValueFactory(new PropertyValueFactory<>("username"));
@@ -392,19 +477,21 @@ public class LibraryApp extends Application {
                 cellData.getValue().isAdmin() ? "Admin" : "User"
         ));
         userTableAdmin.getColumns().addAll(userNameCol, userRoleCol);
-        userTableAdmin.setPrefHeight(180);
+        userTableAdmin.setPrefHeight(150);
 
         newUserField = new TextField();
         newUserField.setPromptText("Username baru");
+
         newUserPassField = new TextField();
         newUserPassField.setPromptText("Password");
+
         Button addUserBtn = new Button("Tambah User");
         addUserBtn.setOnAction(e -> {
             String uname = newUserField.getText().trim();
             String upass = newUserPassField.getText();
             try {
                 if (uname.isEmpty() || upass.isEmpty()) throw new Exception("Username dan password tidak boleh kosong.");
-                if (users.containsKey(uname)) throw new Exception("ProjectLibrary.User sudah ada.");
+                if (users.containsKey(uname)) throw new Exception("User sudah ada.");
                 users.put(uname, new User(uname, upass, false));
                 newUserField.clear();
                 newUserPassField.clear();
@@ -432,27 +519,127 @@ public class LibraryApp extends Application {
         HBox userControls = new HBox(10, newUserField, newUserPassField, addUserBtn, removeUserBtn);
         userControls.setAlignment(Pos.CENTER_LEFT);
 
-        // Admin message label
+        // ==================== PESAN & LOGOUT ====================
         adminMessageLabel = new Label();
 
-        // Logout button
         Button logoutBtn = new Button("Logout");
         logoutBtn.setOnAction(e -> {
             currentUser = null;
             adminMessageLabel.setText("");
             primaryStage.setScene(loginScene);
         });
+        logoutBtn.setMaxWidth(Double.MAX_VALUE);
+        logoutBtn.setStyle("-fx-background-color: white; -fx-text-fill: #b00020;");
 
-        VBox adminLayout = new VBox(15,
-                new Label("Daftar Buku:"), booksTableAdmin, bookControls,
-                new Label("Data Peminjaman:"), borrowTableAdmin,
-                new Label("User:"), userTableAdmin, userControls,
-                adminMessageLabel,
-                logoutBtn
+        // ==================== LOGO TENGAH ====================
+        ImageView logoUMM = new ImageView(new Image("file:src/assets/logo_umm.png")); // sesuaikan path
+        logoUMM.setFitWidth(500);
+        logoUMM.setPreserveRatio(true);
+        logoUMM.setOpacity(0.08);
+        logoUMM.setMouseTransparent(true);
+        logoUMM.setTranslateY(-20);
+
+
+        // ========== BOX: DAFTAR BUKU ==========
+        VBox bukuBox = new VBox(10,
+                new Label("📚 Daftar Buku"),
+                booksTableAdmin,
+                bookControls
         );
-        adminLayout.setPadding(new Insets(15));
-        adminScene = new Scene(adminLayout, 700, 700);
+        bukuBox.setPadding(new Insets(15));
+        bukuBox.setStyle("-fx-border-color: #ccc; -fx-background-color: white; -fx-border-radius: 10; -fx-background-radius: 10;");
+        bukuBox.setMaxWidth(Double.MAX_VALUE);
+        HBox.setHgrow(bukuBox, Priority.ALWAYS);
+
+// ========== BOX: DATA PEMINJAMAN ==========
+        VBox pinjamBox = new VBox(10,
+                new Label("📄 Data Peminjaman"),
+                borrowTableAdmin
+        );
+        pinjamBox.setPadding(new Insets(15));
+        pinjamBox.setStyle("-fx-border-color: #ccc; -fx-background-color: white; -fx-border-radius: 10; -fx-background-radius: 10;");
+        pinjamBox.setMaxWidth(Double.MAX_VALUE);
+        HBox.setHgrow(pinjamBox, Priority.ALWAYS);
+
+// ========== BOX: DAFTAR USER ==========
+        VBox userBox = new VBox(10,
+                new Label("👤 Daftar User"),
+                userTableAdmin,
+                userControls
+        );
+        userBox.setPadding(new Insets(15));
+        userBox.setStyle("-fx-border-color: #ccc; -fx-background-color: white; -fx-border-radius: 10; -fx-background-radius: 10;");
+        HBox.setHgrow(userBox, Priority.ALWAYS);
+
+// ========== KONTEN UTAMA KANAN ==========
+        VBox rightContent = new VBox(20,
+                bukuBox,
+                pinjamBox,
+                userBox,
+                adminMessageLabel
+        );
+        rightContent.setPadding(new Insets(20));
+        rightContent.setFillWidth(true);
+        rightContent.setMaxWidth(Double.MAX_VALUE);
+        rightContent.setPadding(new Insets(20));
+        rightContent.setPrefWidth(1000);
+        HBox.setHgrow(userBox, Priority.ALWAYS);
+
+        StackPane rightStack = new StackPane(logoUMM, rightContent);
+        StackPane.setAlignment(logoUMM, Pos.CENTER);
+        HBox.setHgrow(rightStack, Priority.ALWAYS); // <-- ini penting
+
+
+        // ==================== PANEL KIRI MERAH ====================
+        VBox leftPanel = new VBox(15);
+        leftPanel.setStyle("-fx-background-color: #b00020;");
+        leftPanel.setPadding(new Insets(20));
+        leftPanel.setPrefWidth(280);
+
+        Label adminTitle = new Label("ADMIN PANEL");
+        adminTitle.setStyle("-fx-text-fill: white; -fx-font-size: 18px; -fx-font-weight: bold;");
+        adminTitle.setAlignment(Pos.CENTER); // Atur alignment di tengah
+        adminTitle.setMaxWidth(Double.MAX_VALUE); // Agar bisa berada di tengah dalam VBox
+// Container untuk running text
+        StackPane runningTextContainer = new StackPane();
+        runningTextContainer.setPrefHeight(30);
+        runningTextContainer.setMaxWidth(Double.MAX_VALUE);
+        runningTextContainer.setClip(new Rectangle(240, 30)); // Batasi lebar visible
+
+// Label teks berjalan
+        Label leftInfo = new Label("   Pinjam & kelola buku di sini.   ");
+        leftInfo.setStyle("-fx-text-fill: white; -fx-font-size: 14px;");
+        leftInfo.setMinWidth(Region.USE_PREF_SIZE);
+
+// Masukkan ke container
+        runningTextContainer.getChildren().add(leftInfo);
+
+// Animasi teks berjalan
+        TranslateTransition marquee = new TranslateTransition(Duration.seconds(6), leftInfo);
+        marquee.setCycleCount(Animation.INDEFINITE);
+        marquee.setInterpolator(Interpolator.LINEAR);
+
+// Hitung dari kanan ke kiri setelah container siap
+        runningTextContainer.widthProperty().addListener((obs, oldVal, newVal) -> {
+            marquee.setFromX(newVal.doubleValue());
+            marquee.setToX(-leftInfo.prefWidth(-1));
+            marquee.play();
+        });
+
+
+
+        Region spacer = new Region();
+        VBox.setVgrow(spacer, Priority.ALWAYS);
+        leftPanel.getChildren().addAll(adminTitle, new Separator(), runningTextContainer, spacer, logoutBtn);
+
+
+        // ==================== GABUNG KIRI & KANAN ====================
+        HBox mainLayout = new HBox(leftPanel, rightStack);
+        HBox.setHgrow(mainLayout, Priority.ALWAYS); // biar HBox membesar saat fullscreen
+        adminScene = new Scene(mainLayout, 1280, 720);
     }
+
+
 
     // ==================== USER SCENE ====================
     private TableView<Book> booksTableUser;
@@ -475,12 +662,17 @@ public class LibraryApp extends Application {
                 cellData.getValue().isBorrowed() ? "Dipinjam" : "Tersedia"
         ));
         booksTableUser.getColumns().addAll(titleCol, statusCol);
-        booksTableUser.setPrefHeight(200);
+        booksTableUser.setPrefHeight(180);
 
         daysSpinner = new Spinner<>(1, 30, 7);
         daysSpinner.setEditable(true);
 
+        // === PINJAM BUKU BUTTON ===
         Button borrowBtn = new Button("Pinjam Buku");
+        borrowBtn.setStyle("-fx-background-color: #1976d2; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 6; -fx-cursor: hand;");
+        borrowBtn.setOnMouseEntered(e -> borrowBtn.setStyle("-fx-background-color: #1565c0; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 6; -fx-cursor: hand;"));
+        borrowBtn.setOnMouseExited(e -> borrowBtn.setStyle("-fx-background-color: #1976d2; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 6; -fx-cursor: hand;"));
+
         borrowBtn.setOnAction(e -> {
             Book selected = booksTableUser.getSelectionModel().getSelectedItem();
             if (selected == null) {
@@ -504,7 +696,6 @@ public class LibraryApp extends Application {
 
         userMessageLabel = new Label();
 
-        // Table user borrow records
         userBorrowTable = new TableView<>();
         TableColumn<BorrowRecord, String> urBookCol = new TableColumn<>("Judul Buku");
         urBookCol.setCellValueFactory(new PropertyValueFactory<>("bookTitle"));
@@ -519,7 +710,12 @@ public class LibraryApp extends Application {
         userBorrowTable.getColumns().addAll(urBookCol, urBorrowDateCol, urDaysCol, urFineCol);
         userBorrowTable.setPrefHeight(150);
 
+        // === KEMBALIKAN BUKU BUTTON ===
         Button returnBookBtn = new Button("Kembalikan Buku Terpilih");
+        returnBookBtn.setStyle("-fx-background-color: #43a047; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 6; -fx-cursor: hand;");
+        returnBookBtn.setOnMouseEntered(e -> returnBookBtn.setStyle("-fx-background-color: #388e3c; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 6; -fx-cursor: hand;"));
+        returnBookBtn.setOnMouseExited(e -> returnBookBtn.setStyle("-fx-background-color: #43a047; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 6; -fx-cursor: hand;"));
+
         returnBookBtn.setOnAction(e -> {
             BorrowRecord selected = userBorrowTable.getSelectionModel().getSelectedItem();
             if (selected == null) {
@@ -527,7 +723,6 @@ public class LibraryApp extends Application {
                 return;
             }
             borrowRecords.remove(selected);
-            // Set buku menjadi tersedia
             books.stream()
                     .filter(b -> b.getTitle().equals(selected.getBookTitle()))
                     .findFirst()
@@ -536,28 +731,103 @@ public class LibraryApp extends Application {
             refreshUserData();
         });
 
+        // === LOGOUT BUTTON ===
         Button logoutBtn = new Button("Logout");
         logoutBtn.setOnAction(e -> {
             currentUser = null;
             userMessageLabel.setText("");
             primaryStage.setScene(loginScene);
         });
+        logoutBtn.setMaxWidth(Double.MAX_VALUE);
+        logoutBtn.setStyle("-fx-background-color: white; -fx-text-fill: #b00020; -fx-font-weight: bold;");
 
-        VBox userLayout = new VBox(10,
+        // ========= PANEL KIRI =========
+        VBox leftPanel = new VBox(15);
+        leftPanel.setStyle("-fx-background-color: #b00020;");
+        leftPanel.setPadding(new Insets(20));
+        leftPanel.setPrefWidth(280);
+
+        Label leftTitle = new Label("USER PANEL");
+        leftTitle.setStyle("-fx-text-fill: white; -fx-font-size: 18px; -fx-font-weight: bold;");
+        leftTitle.setAlignment(Pos.CENTER); // Atur alignment di tengah
+        leftTitle.setMaxWidth(Double.MAX_VALUE); // Agar bisa berada di tengah dalam VBox
+
+        // Container untuk running text
+        StackPane runningTextContainer = new StackPane();
+        runningTextContainer.setPrefHeight(30);
+        runningTextContainer.setMaxWidth(Double.MAX_VALUE);
+        runningTextContainer.setClip(new Rectangle(240, 30)); // Batasi lebar visible
+
+// Label teks berjalan
+        Label leftInfo = new Label("   Pinjam & Kembalikan buku di sini.   ");
+        leftInfo.setStyle("-fx-text-fill: white; -fx-font-size: 14px;");
+        leftInfo.setMinWidth(Region.USE_PREF_SIZE);
+
+// Masukkan ke container
+        runningTextContainer.getChildren().add(leftInfo);
+
+// Animasi teks berjalan
+        TranslateTransition marquee = new TranslateTransition(Duration.seconds(6), leftInfo);
+        marquee.setCycleCount(Animation.INDEFINITE);
+        marquee.setInterpolator(Interpolator.LINEAR);
+
+// Hitung dari kanan ke kiri setelah container siap
+        runningTextContainer.widthProperty().addListener((obs, oldVal, newVal) -> {
+            marquee.setFromX(newVal.doubleValue());
+            marquee.setToX(-leftInfo.prefWidth(-1));
+            marquee.play();
+        });
+
+        Region spacer = new Region();
+        VBox.setVgrow(spacer, Priority.ALWAYS);
+        leftPanel.getChildren().addAll(leftTitle, new Separator(), runningTextContainer, spacer, logoutBtn);
+
+        // ========= LOGO =========
+        ImageView logoUMM = new ImageView(new Image("file:src/assets/logo_umm.png")); // pastikan path file benar
+        logoUMM.setFitWidth(500);
+        logoUMM.setPreserveRatio(true);
+        logoUMM.setOpacity(0.05);
+        logoUMM.setMouseTransparent(true);
+        logoUMM.setTranslateY(-20);
+
+        // ========= BOX 1: CARI DAN PINJAM =========
+        VBox borrowBox = new VBox(10,
                 new HBox(10, searchLabel, searchBookField),
                 booksTableUser,
                 new HBox(10, new Label("Jangka waktu (hari):"), daysSpinner, borrowBtn),
-                userMessageLabel,
+                userMessageLabel
+        );
+        borrowBox.setPadding(new Insets(15));
+        borrowBox.setStyle("-fx-border-color: #ccc; -fx-background-color: white; -fx-border-radius: 10; -fx-background-radius: 10;");
+        borrowBox.setMaxWidth(Double.MAX_VALUE);
+
+        // ========= BOX 2: TABEL PEMINJAMAN =========
+        VBox returnBox = new VBox(10,
                 new Label("Data Peminjaman Anda:"),
                 userBorrowTable,
-                returnBookBtn,
-                logoutBtn
+                returnBookBtn
         );
-        userLayout.setPadding(new Insets(15));
+        returnBox.setPadding(new Insets(15));
+        returnBox.setStyle("-fx-border-color: #ccc; -fx-background-color: white; -fx-border-radius: 10; -fx-background-radius: 10;");
+        returnBox.setMaxWidth(Double.MAX_VALUE);
 
-        userScene = new Scene(userLayout, 600, 600);
+        // ========= PANEL KANAN =========
+        VBox rightPanel = new VBox(20, borrowBox, returnBox);
+        rightPanel.setPadding(new Insets(20));
+        VBox.setVgrow(borrowBox, Priority.NEVER);
+        VBox.setVgrow(returnBox, Priority.NEVER);
+
+        StackPane rightStack = new StackPane(logoUMM, rightPanel);
+
+        // ========= MAIN LAYOUT =========
+        HBox mainLayout = new HBox(leftPanel, rightStack);
+        HBox.setHgrow(rightStack, Priority.ALWAYS);
+        userScene = new Scene(mainLayout, 1280, 720);
     }
 
+
+
+    // ====== SISTEM SEARCH ======
     private void filterBooks() {
         String filter = searchBookField.getText().toLowerCase();
         List<Book> filtered = books.stream()
