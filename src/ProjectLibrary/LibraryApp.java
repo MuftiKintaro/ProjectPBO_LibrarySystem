@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 public class LibraryApp extends Application {
 
     private Stage primaryStage;
-    private Scene loginScene, adminScene, userScene;
+    private Scene loginScene, adminScene, userScene, registrationScene;
 
     // Data storage
     private Map<String, User> users = new HashMap<>();
@@ -47,6 +47,7 @@ public class LibraryApp extends Application {
         initLoginScene();
         initAdminScene();
         initUserScene();
+        initRegistrationScene();
 
         primaryStage.setScene(loginScene);
         primaryStage.show();
@@ -65,6 +66,76 @@ public class LibraryApp extends Application {
         books.add(new Book("40 Hari Di Malam Kubur"));
         books.add(new Book("Logika Komputasi"));
         books.add(new Book("G30S PKI"));
+    }
+
+    // ==================== REGISTRATION SCENE ====================
+    private void initRegistrationScene() {
+        VBox registrationBox = new VBox(20);
+        registrationBox.setAlignment(Pos.CENTER);
+        registrationBox.setPadding(new Insets(30));
+        registrationBox.setStyle("-fx-background-color: rgba(255, 255, 255, 0.9); -fx-background-radius: 20;");
+
+        Label titleLabel = new Label("Registrasi Anggota");
+        titleLabel.setFont(new Font("Segoe UI", 24));
+
+        Label errorLabel = new Label();
+        errorLabel.setTextFill(Color.RED);
+        errorLabel.setVisible(false);
+
+        TextField usernameField = new TextField();
+        usernameField.setPromptText("Username");
+        usernameField.setMaxWidth(240);
+
+        PasswordField passwordField = new PasswordField();
+        passwordField.setPromptText("Password");
+        passwordField.setMaxWidth(240);
+
+        Button registerBtn = new Button("Daftar");
+        registerBtn.setPrefWidth(240);
+        registerBtn.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white;");
+
+        registerBtn.setOnAction(e -> {
+            String username = usernameField.getText().trim();
+            String password = passwordField.getText();
+
+            if (username.isEmpty() || password.isEmpty()) {
+                errorLabel.setText("Username dan password tidak boleh kosong");
+                errorLabel.setVisible(true);
+                return;
+            }
+
+            if (users.containsKey(username)) {
+                errorLabel.setText("Username sudah digunakan");
+                errorLabel.setVisible(true);
+                return;
+            }
+
+            users.put(username, new User(username, password, false));
+            errorLabel.setText("Registrasi berhasil! Silakan login");
+            errorLabel.setTextFill(Color.GREEN);
+            errorLabel.setVisible(true);
+
+            usernameField.clear();
+            passwordField.clear();
+        });
+
+        Button backToLoginBtn = new Button("Kembali ke Login");
+        backToLoginBtn.setStyle("-fx-text-fill: #007bff;");
+        backToLoginBtn.setOnAction(e -> {
+            errorLabel.setVisible(false);
+            primaryStage.setScene(loginScene);
+        });
+
+        registrationBox.getChildren().addAll(
+                titleLabel,
+                errorLabel,
+                usernameField,
+                passwordField,
+                registerBtn,
+                backToLoginBtn
+        );
+
+        registrationScene = new Scene(registrationBox, 400, 400);
     }
 
 
@@ -106,6 +177,14 @@ public class LibraryApp extends Application {
         Label messageLabel = new Label();
         loginBtn.setPrefWidth(240);
         loginBtn.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-font-size: 14px; -fx-background-radius: 8;");
+
+        Button registerBtn = new Button("Daftar Anggota Baru");
+        registerBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: white; -fx-underline: true;");
+        registerBtn.setOnAction(e -> {
+            errorLabel.setVisible(false);
+            primaryStage.setScene(registrationScene);
+        });
+
 
         Button forgotButton = new Button("Lupa Password?");
         forgotButton.setStyle("-fx-background-color: transparent; -fx-text-fill: white; -fx-underline: true;");
@@ -150,7 +229,7 @@ public class LibraryApp extends Application {
         });
 
         //===== BOX HITAM DI TENGAH! =====
-        VBox loginBox = new VBox(10, titleLabel, errorLabel,  usernameField, passwordField, loginBtn, forgotButton);
+        VBox loginBox = new VBox(10, titleLabel, errorLabel,  usernameField, passwordField, loginBtn, forgotButton, registerBtn);
         loginBox.setAlignment(Pos.CENTER);
         loginBox.setMaxWidth(500);
         loginBox.setPadding(new Insets(30));
