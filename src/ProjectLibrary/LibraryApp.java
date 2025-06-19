@@ -7,7 +7,11 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
 import javafx.stage.Stage;
 
 import java.time.LocalDate;
@@ -63,29 +67,75 @@ public class LibraryApp extends Application {
         books.add(new Book("G30S PKI"));
     }
 
+
     // ==================== LOGIN SCENE ====================
     private void initLoginScene() {
-        Label userLabel = new Label("Username:");
-        TextField userField = new TextField();
-        Label passLabel = new Label("Password:");
-        PasswordField passField = new PasswordField();
+        // ==================== BG =======================
+        Image bgImage = new Image((getClass().getResource("/assets/IMG_1204.png").toExternalForm())); // Ganti dengan path yang valid
+        ImageView bgView = new ImageView(bgImage);
+        bgView.setPreserveRatio(false);
+        bgView.setSmooth(true);
+        bgView.setCache(true);
+
+        // ===== Logo =====
+        Image logoImage = new Image((getClass().getResource("/assets/Logo_umm.png").toExternalForm())); // Ganti path sesuai logo Anda
+        ImageView logoView = new ImageView(logoImage);
+        logoView.setFitHeight(200);
+        logoView.setPreserveRatio(true);
+
+        //====== Username dan Password =======
+        Label titleLabel = new Label("Selamat Datang Di Perpustakaan UMM");
+        titleLabel.setFont(new Font("Segoe UI", 24));
+        titleLabel.setTextFill(Color.WHITE);
+
+        Label errorLabel = new Label();
+        errorLabel.setTextFill(Color.RED);
+        errorLabel.setFont(Font.font(12));
+        errorLabel.setVisible(false);
+
+
+        TextField usernameField = new TextField();
+        usernameField.setPromptText("Username");
+        usernameField.setMaxWidth(240);
+
+        PasswordField passwordField = new PasswordField();
+        passwordField.setPromptText("Password");
+        passwordField.setMaxWidth(240);
 
         Button loginBtn = new Button("Login");
         Label messageLabel = new Label();
+        loginBtn.setPrefWidth(240);
+        loginBtn.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-font-size: 14px; -fx-background-radius: 8;");
 
+        Button forgotButton = new Button("Lupa Password?");
+        forgotButton.setStyle("-fx-background-color: transparent; -fx-text-fill: white; -fx-underline: true;");
+        forgotButton.setOnAction(e -> {
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("Reset Password");
+            alert.setHeaderText(null);
+            alert.setContentText("Silakan hubungi admin untuk reset password.");
+            alert.showAndWait();
+        });
+
+
+        //===== Login Button Logic ====
         loginBtn.setOnAction(e -> {
-            String username = userField.getText().trim();
-            String password = passField.getText();
+            String username = usernameField.getText().trim();
+            String password = passwordField.getText();
 
             if (username.isEmpty() || password.isEmpty()) {
-                messageLabel.setText("Username dan password harus diisi.");
-                return;
+                errorLabel.setText("Username dan password tidak boleh kosong.");
+                errorLabel.setVisible(true);
+                return; // hentikan eksekusi jika input kosong
             }
 
             User user = users.get(username);
             if (user != null && user.getPassword().equals(password)) {
                 currentUser = user;
-                messageLabel.setText("");
+                errorLabel.setVisible(false); // sembunyikan error
+                usernameField.clear();
+                passwordField.clear();
+
                 if (user.isAdmin()) {
                     refreshAdminData();
                     primaryStage.setScene(adminScene);
@@ -93,26 +143,29 @@ public class LibraryApp extends Application {
                     refreshUserData();
                     primaryStage.setScene(userScene);
                 }
-                userField.clear();
-                passField.clear();
             } else {
-                messageLabel.setText("Username atau password salah.");
+                errorLabel.setText("Username atau password salah.");
+                errorLabel.setVisible(true);
             }
         });
 
-        VBox loginBox = new VBox(12,
-                userLabel, userField,
-                passLabel, passField,
-                loginBtn,
-                messageLabel
-        );
+        //===== BOX HITAM DI TENGAH! =====
+        VBox loginBox = new VBox(10, titleLabel, errorLabel,  usernameField, passwordField, loginBtn, forgotButton);
         loginBox.setAlignment(Pos.CENTER);
-        loginBox.setPadding(new Insets(20));
+        loginBox.setMaxWidth(500);
+        loginBox.setPadding(new Insets(30));
+        loginBox.setStyle("-fx-background-color: rgba(0, 0, 0, 0.5); -fx-background-radius: 20; ");
 
-        BorderPane root = new BorderPane();
-        root.setCenter(loginBox);
+        VBox content = new VBox(20, logoView, loginBox);
+        content.setAlignment(Pos.CENTER);
 
-        loginScene = new Scene(root, 400, 300);
+        StackPane root = new StackPane(bgView, content);
+
+        loginScene  = new Scene(root, 1280, 720);
+        bgView.fitWidthProperty().bind(loginScene.widthProperty());
+        bgView.fitHeightProperty().bind(loginScene.heightProperty());
+
+
     }
 
     // ==================== ADMIN SCENE ====================
@@ -192,7 +245,7 @@ public class LibraryApp extends Application {
         userNameCol.setCellValueFactory(new PropertyValueFactory<>("username"));
         TableColumn<User, String> userRoleCol = new TableColumn<>("Role");
         userRoleCol.setCellValueFactory(cellData -> new SimpleStringProperty(
-                cellData.getValue().isAdmin() ? "Admin" : "ProjectLibrary.User"
+                cellData.getValue().isAdmin() ? "Admin" : "User"
         ));
         userTableAdmin.getColumns().addAll(userNameCol, userRoleCol);
         userTableAdmin.setPrefHeight(180);
@@ -201,7 +254,7 @@ public class LibraryApp extends Application {
         newUserField.setPromptText("Username baru");
         newUserPassField = new TextField();
         newUserPassField.setPromptText("Password");
-        Button addUserBtn = new Button("Tambah ProjectLibrary.User");
+        Button addUserBtn = new Button("Tambah User");
         addUserBtn.setOnAction(e -> {
             String uname = newUserField.getText().trim();
             String upass = newUserPassField.getText();
@@ -211,21 +264,21 @@ public class LibraryApp extends Application {
                 users.put(uname, new User(uname, upass, false));
                 newUserField.clear();
                 newUserPassField.clear();
-                adminMessageLabel.setText("ProjectLibrary.User '" + uname + "' berhasil ditambahkan.");
+                adminMessageLabel.setText("User '" + uname + "' berhasil ditambahkan.");
                 refreshAdminData();
             } catch (Exception ex) {
                 adminMessageLabel.setText(ex.getMessage());
             }
         });
 
-        Button removeUserBtn = new Button("Hapus ProjectLibrary.User Terpilih");
+        Button removeUserBtn = new Button("Hapus User Terpilih");
         removeUserBtn.setOnAction(e -> {
             User u = userTableAdmin.getSelectionModel().getSelectedItem();
             try {
                 if (u == null) throw new Exception("Pilih user terlebih dahulu.");
                 if (u.isAdmin()) throw new Exception("Tidak bisa menghapus admin.");
                 users.remove(u.getUsername());
-                adminMessageLabel.setText("ProjectLibrary.User '" + u.getUsername() + "' berhasil dihapus.");
+                adminMessageLabel.setText("User '" + u.getUsername() + "' berhasil dihapus.");
                 refreshAdminData();
             } catch (Exception ex) {
                 adminMessageLabel.setText(ex.getMessage());
@@ -249,12 +302,13 @@ public class LibraryApp extends Application {
         VBox adminLayout = new VBox(15,
                 new Label("Daftar Buku:"), booksTableAdmin, bookControls,
                 new Label("Data Peminjaman:"), borrowTableAdmin,
-                new Label("ProjectLibrary.User:"), userTableAdmin, userControls,
+                new Label("User:"), userTableAdmin, userControls,
                 adminMessageLabel,
                 logoutBtn
         );
-        adminLayout.setPadding(new Insets(15));
-        adminScene = new Scene(adminLayout, 700, 700);
+        adminLayout.setPadding(new Insets(15, 15, 15,300));
+        adminLayout.setPrefHeight(600);
+        adminScene = new Scene(adminLayout, 1280, 720);
     }
 
     // ==================== USER SCENE ====================
@@ -356,9 +410,11 @@ public class LibraryApp extends Application {
                 returnBookBtn,
                 logoutBtn
         );
-        userLayout.setPadding(new Insets(15));
 
-        userScene = new Scene(userLayout, 600, 600);
+
+        userLayout.setPadding(new Insets(15,15,15,300));
+
+        userScene = new Scene(userLayout, 1280, 720);
     }
 
     private void filterBooks() {
