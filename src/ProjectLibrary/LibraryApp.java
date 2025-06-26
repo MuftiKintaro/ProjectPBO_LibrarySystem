@@ -728,6 +728,7 @@ public class LibraryApp extends Application {
         returnBookBtn.setOnMouseEntered(e -> returnBookBtn.setStyle("-fx-background-color: #388e3c; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 6; -fx-cursor: hand;"));
         returnBookBtn.setOnMouseExited(e -> returnBookBtn.setStyle("-fx-background-color: #43a047; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 6; -fx-cursor: hand;"));
 
+
         returnBookBtn.setOnAction(e -> {
             BorrowRecord selected = userBorrowTable.getSelectionModel().getSelectedItem();
             if (selected == null) {
